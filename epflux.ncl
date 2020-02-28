@@ -33,7 +33,7 @@ dudt2 = epf2->dudt(:,:,:)
 
 plev	= epf1->plev(:)/100
 time	= epf1->time(:)
-lat   = epf1->lat(:)
+lat   = -epf1->lat(:)
 
 
 ; --- Setting counters of bootstrapping
@@ -89,7 +89,7 @@ end
 nBoot		= 1000         							; user set
 nDim		= 0								; or (/0,0/); dimension numbers corresponding to 'N'
 opt		= True								; use all default options
-BootStrap	= bootstrap_diff(Fphi1_total, Fphi1_total, nBoot, nDim, opt)	; do all the resampling and calculations
+BootStrap	= bootstrap_diff(Fphi2_total, Fphi1_total, nBoot, nDim, opt)	; do all the resampling and calculations
 rBoot		= BootStrap[0]							; All the bootstrapped values
 rBootLow95	= bootstrap_estimate(rBoot, 0.025, False)   			; 2.5% lower confidence bound 
 rBootLow80	= bootstrap_estimate(rBoot, 0.1, False)   			; 2.5% lower confidence bound 
@@ -132,14 +132,14 @@ do while (i.le.11)
 	res_vec@tiXAxisFontHeightF    = 0.0175
 	res_vec@tiYAxisFontHeightF    = 0.0175
 
-	res_vec@vcRefMagnitudeF       = 50                ; add a reference vector
+	res_vec@vcRefMagnitudeF       = 100                ; add a reference vector
 	res_vec@vcRefLengthF          = 0.05              ; what the ref length is
 	res_vec@vcMonoLineArrowColor  = False             ; vec's colored by their mag
 	res_vec@vcLevelPalette        = "rainbow"         
 	res_vec@vcLevelSelectionMode  = "ManualLevels"
-	res_vec@vcLevelSpacingF       = 5.0
+	res_vec@vcLevelSpacingF       = 10.0
 	res_vec@vcMinLevelValF        = 0.0
-	res_vec@vcMaxLevelValF        = 100
+	res_vec@vcMaxLevelValF        = 200
 	res_vec@vcRefAnnoOn           = False             ; turn off ref wind barb
 	res_vec@vcMinDistanceF        = 0.00875           ; trial and error
 
@@ -161,6 +161,7 @@ do while (i.le.11)
 
 	res_vec@vpWidthF              = 0.60              ; shape
 	res_vec@vpHeightF             = 0.35
+	;res_vec@lbLabelBarOn	      = True		  ;
 
 ; --- Create contour plot resources
 
@@ -182,6 +183,7 @@ do while (i.le.11)
 	res_con@cnLineThicknessF      = 2.0                ; default is 1.0
 	;res_con@gsnContourLineThicknessesScale  = 0.5
 	res_con@cnLineLabelsOn        = False
+	;res_con@lbLabelBarOn          = False		   ; Labelbar switch
 	;res_con@cnInfoLabelOn        = False              ; default is True
   
 
@@ -189,7 +191,7 @@ do while (i.le.11)
 ; --- Experiment1: open file and create graphic
 
 	pltType = "png"
-	pltPath = pltDir+pltRoot+"_"+i+"_"+monthname(i)+"_Experiment_"+exp1
+	pltPath = pltDir+pltRoot+"_"+i+"_"+monthname(i)+"_T"+res+"_Experiment_"+exp1
 	wks     = gsn_open_wks(pltType,pltPath)                
 	plotvec = gsn_vector(wks,Fphi1(i,:,minlat:maxlat),Fp1(i,:,minlat:maxlat),res_vec)    
 
@@ -216,7 +218,7 @@ do while (i.le.11)
 ; --- Experiment2: open file and create graphic
 
 	pltType = "png"
-	pltPath = pltDir+pltRoot+"_"+monthname(i)+"_Experiment_"+exp2
+	pltPath = pltDir+pltRoot+"_"+monthname(i)+"_T"+res+"_Experiment_"+exp2
 	wks     = gsn_open_wks(pltType,pltPath)                
 	plotvec = gsn_vector(wks,Fphi2(i,:,minlat:maxlat),Fp2(i,:,minlat:maxlat),res_vec)    
 
@@ -264,7 +266,7 @@ do while (i.le.11)
 	res_sig@tiXAxisFontHeightF    = 0.0175
 	res_sig@tiYAxisFontHeightF    = 0.0175
 
-	;res_sig@pmLabelBarDisplayMode = "Always"          ; Turn on a label bar.
+	res_sig@pmLabelBarDisplayMode = "Conditional"          ; Turn on a label bar.
 	res_sig@pmLabelBarWidthF      = 0.08              ; make it thinner
 	res_sig@lbPerimOn             = False             ; no box around it
 
@@ -294,17 +296,17 @@ do while (i.le.11)
 	res_sig@lbLabelBarOn          = False
 
 
-	res_vec@vcRefMagnitudeF       = 5				; add a reference vector
+	res_vec@vcRefMagnitudeF       = 10				; add a reference vector
 	res_vec@vcRefLengthF          = 0.05				; what the ref length is
-	res_vec@vcLevelSpacingF       = 0.5
-	res_vec@vcMaxLevelValF        = 10
+	res_vec@vcLevelSpacingF       = 1
+	res_vec@vcMaxLevelValF        = 20
 
 
 
 ; --- Workframe for significance plot
 
 	pltType = "png"
-	pltPath = pltDir+pltRoot+"_diff_"+i+"_"+monthname(i)+"_Experiment_"+exp2+"-"+exp1
+	pltPath = pltDir+pltRoot+"_diff_"+i+"_"+monthname(i)+"_T"+res+"_Experiment_"+exp2+"-"+exp1
 	wks     = gsn_open_wks(pltType,pltPath)
 	plotsig2 = gsn_csm_contour(wks,rBootp95(i,:,minlat:maxlat),res_sig)        					; create plot significance plot
 	plotsig = gsn_csm_contour(wks,rBootp80(i,:,minlat:maxlat),res_sig)        					; create plot significance plot
