@@ -8,11 +8,11 @@
 
 ; --- file names; open each; size information  
 
-minlat	= 0
-maxlat	= 159
+;minlat	= 161
+;maxlat	= 320
 show_accel 	= 0
-pltDir	= "/p/project/chhb19/jstreffi/postprocessing/PAMIP/"              ; dir for output plot
-pltType = "png"             	; getenv("pltType")   
+pltDir	= "/p/project/chhb19/jstreffi/postprocessing/PAMIP/epflux/"              ; dir for output plot
+pltType = "pdf"             	; getenv("pltType")   
 pltRoot = "epflux"          	; getenv("pltRoot")
 
 res	= getenv("res")		; model resolution
@@ -33,17 +33,17 @@ dudt2 = epf2->dudt(:,:,:)
 
 plev	= epf1->plev(:)/100
 time	= epf1->time(:)
-lat   = -epf1->lat(:)
+lat   = epf1->lat(:)
 
 
 ; --- Setting counters of bootstrapping
 
 if (res .eq. 159) then
 	i = 101
-	ensnumber = 300
+	ensnumber = 180
 elseif (res .eq. 511) then
 	i = 101
-	ensnumber = 200
+	ensnumber = 140
 elseif (res .eq. 1279) then
 	i = 61
 	ensnumber = 100
@@ -102,9 +102,8 @@ rBootp80 = where(rBootLow80 .gt. 0.1 .or. rBootHi80 .lt. 0.9, 0, 1)
 
 
 ; --- Options for plotting
-monthname = (/"January","February","March","April" \
-            ,"May","June","July","August" \
-            ,"September","October","November","December" /)
+monthname = (/"June","July","August","September","October","November"\
+	    ,"December","January","February","March","April","May" /)
 
 i = 0
 do while (i.le.11) 
@@ -118,11 +117,12 @@ do while (i.le.11)
 	; create vector plot resources for pressure-level grid 
 	;************************************************
 	res_vec = True
+	res_vec@vcGlyphStyle 	      = "LineArrow"
 	res_vec@gsnMaximize           = True              ; make ps/eps/pdf large (no effect otherwise)
 	res_vec@gsnDraw               = False             ; allows for manual overlaying        
 	res_vec@gsnFrame              = False        
-
-	res_vec@vfXArray              = lat(minlat:maxlat)               ; use lat for x axis
+	 
+	res_vec@vfXArray              = lat               ; use lat for x axis
 	res_vec@vfYArray              = plev              ; use pressure for y axis
 	res_vec@trYReverse            = True              ; reverse y-axis
 	res_vec@gsnYAxisIrregular2Log = True              ; set y-axis to log scale
@@ -132,8 +132,9 @@ do while (i.le.11)
 	res_vec@tiXAxisFontHeightF    = 0.0175
 	res_vec@tiYAxisFontHeightF    = 0.0175
 
-	res_vec@vcRefMagnitudeF       = 100                ; add a reference vector
-	res_vec@vcRefLengthF          = 0.05              ; what the ref length is
+	res_vec@vcLineArrowThicknessF = 2.5
+	;res_vec@vcRefMagnitudeF       = 100                ; add a reference vector
+	res_vec@vcRefLengthF          = 0.035              ; what the ref length is
 	res_vec@vcMonoLineArrowColor  = False             ; vec's colored by their mag
 	res_vec@vcLevelPalette        = "rainbow"         
 	res_vec@vcLevelSelectionMode  = "ManualLevels"
@@ -169,14 +170,14 @@ do while (i.le.11)
 	res_con@gsnDraw               = False
 	res_con@gsnFrame              = False
 
-	res_con@sfXArray              = res_vec@vfXArray   ; =lat(minlat:maxlat)
+	res_con@sfXArray              = res_vec@vfXArray   ; =lat
 	res_con@sfYArray              = res_vec@vfYArray   ; =plev
 	res_con@trYReverse            = True               ; reverse y-axis
 
 	res_con@gsnYAxisIrregular2Log = True               ; set y-axis to log scale
 	res_con@gsnContourZeroLineThicknessF = 0.0
-	res_con@gsnContourPosLineDashPattern = 2
-	;res_con@gsnContourNegLineDashPattern = 2
+	res_con@gsnContourPosLineDashPattern = 0
+	res_con@gsnContourNegLineDashPattern = 5
 
 	res_con@cnSmoothingOn         = True
 	res_con@cnLineColor           = "black"      
@@ -190,22 +191,22 @@ do while (i.le.11)
 
 ; --- Experiment1: open file and create graphic
 
-	pltType = "png"
+	pltType = "pdf"
 	pltPath = pltDir+pltRoot+"_"+i+"_"+monthname(i)+"_T"+res+"_Experiment_"+exp1
 	wks     = gsn_open_wks(pltType,pltPath)                
-	plotvec = gsn_vector(wks,Fphi1(i,:,minlat:maxlat),Fp1(i,:,minlat:maxlat),res_vec)    
+	plotvec = gsn_vector(wks,Fphi1(i,:,:),Fp1(i,:,:),res_vec)    
 
 	if (show_accel .eq. 1) then 
 		dudt1@_FillValue = -999.0
 		dudt1(i,0,:) = dudt1@_FillValue					; Hide the 1000 mb level
 		res_con@cnLevelSpacingF        = 1.				; Contour level Spacing
-		plotvec2 = gsn_contour(wks,dudt1(i,:,minlat:maxlat),res_con)	; Creates plot for du/dt = div(F)/(a*cos(phi))
+		plotvec2 = gsn_contour(wks,dudt1(i,:,:),res_con)	; Creates plot for du/dt = div(F)/(a*cos(phi))
 		overlay(plotvec,plotvec2)
 	else
 		EPdiv1@_FillValue = -999.0
 		EPdiv1(i,0,:) = EPdiv1@_FillValue				; Hide the 1000 mb level
 		res_con@cnLevelSpacingF        = 20.				; Contour level Spacing
-		plotvec3 = gsn_contour(wks,EPdiv1(i,:,minlat:maxlat),res_con)	; Creates plot for div(F)
+		plotvec3 = gsn_contour(wks,EPdiv1(i,:,:),res_con)	; Creates plot for div(F)
 		overlay(plotvec,plotvec3)
 	end if
 
@@ -217,22 +218,22 @@ do while (i.le.11)
 
 ; --- Experiment2: open file and create graphic
 
-	pltType = "png"
+	pltType = "pdf"
 	pltPath = pltDir+pltRoot+"_"+monthname(i)+"_T"+res+"_Experiment_"+exp2
 	wks     = gsn_open_wks(pltType,pltPath)                
-	plotvec = gsn_vector(wks,Fphi2(i,:,minlat:maxlat),Fp2(i,:,minlat:maxlat),res_vec)    
+	plotvec = gsn_vector(wks,Fphi2(i,:,:),Fp2(i,:,:),res_vec)    
 
 	if (show_accel .eq. 1) then 
 		dudt2@_FillValue = -999.0
 		dudt2(i,0,:) = dudt2@_FillValue					; Hide the 1000 mb level
 		res_con@cnLevelSpacingF        = 1.				; Contour level Spacing
-		plotvec2 = gsn_contour(wks,dudt2(i,:,minlat:maxlat),res_con)	; Creates plot for du/dt = div(F)/(a*cos(phi))
+		plotvec2 = gsn_contour(wks,dudt2(i,:,:),res_con)	; Creates plot for du/dt = div(F)/(a*cos(phi))
 		overlay(plotvec,plotvec2)
 	else
 		EPdiv2@_FillValue = -999.0
 		EPdiv2(i,0,:) = EPdiv2@_FillValue				; Hide the 1000 mb level
 		res_con@cnLevelSpacingF        = 20.				; Contour level Spacing
-		plotvec3 = gsn_contour(wks,EPdiv2(i,:,minlat:maxlat),res_con)	; Creates plot for div(F)
+		plotvec3 = gsn_contour(wks,EPdiv2(i,:,:),res_con)	; Creates plot for div(F)
 		overlay(plotvec,plotvec3)
 	end if
 
@@ -284,7 +285,7 @@ do while (i.le.11)
 
 	res_sig@vpWidthF              = 0.60              ; shape
 	res_sig@vpHeightF             = 0.35
-	res_sig@sfXArray              = res_vec@vfXArray		; =lat(minlat:maxlat)
+	res_sig@sfXArray              = res_vec@vfXArray		; =lat
 	res_sig@sfYArray              = res_vec@vfYArray		; =plev
 
 	res_sig@cnLinesOn	      = False				; turn off contour lines
@@ -296,8 +297,8 @@ do while (i.le.11)
 	res_sig@lbLabelBarOn          = False
 
 
-	res_vec@vcRefMagnitudeF       = 10				; add a reference vector
-	res_vec@vcRefLengthF          = 0.05				; what the ref length is
+	res_vec@vcRefMagnitudeF       = 20				; add a reference vector
+	res_vec@vcRefLengthF          = 0.035				; what the ref length is
 	res_vec@vcLevelSpacingF       = 1
 	res_vec@vcMaxLevelValF        = 20
 
@@ -305,16 +306,16 @@ do while (i.le.11)
 
 ; --- Workframe for significance plot
 
-	pltType = "png"
+	pltType = "pdf"
 	pltPath = pltDir+pltRoot+"_diff_"+i+"_"+monthname(i)+"_T"+res+"_Experiment_"+exp2+"-"+exp1
 	wks     = gsn_open_wks(pltType,pltPath)
-	plotsig2 = gsn_csm_contour(wks,rBootp95(i,:,minlat:maxlat),res_sig)        					; create plot significance plot
-	plotsig = gsn_csm_contour(wks,rBootp80(i,:,minlat:maxlat),res_sig)        					; create plot significance plot
+	plotsig2 = gsn_csm_contour(wks,rBootp95(i,:,:),res_sig)        					; create plot significance plot
+	plotsig = gsn_csm_contour(wks,rBootp80(i,:,:),res_sig)        					; create plot significance plot
 	overlay(plotsig,plotsig2)
 
 ; --- Experiment2-Experiment1 vector graphic
 
-	plotvec = gsn_vector(wks,Fphi2(i,:,minlat:maxlat)-Fphi1(i,:,minlat:maxlat),Fp2(i,:,minlat:maxlat)-Fp1(i,:,minlat:maxlat),res_vec)
+	plotvec = gsn_vector(wks,Fphi2(i,:,:)-Fphi1(i,:,:),Fp2(i,:,:)-Fp1(i,:,:),res_vec)
 	overlay(plotsig,plotvec)
 
 ; --- Acceleration or Divergence of EP Flux
@@ -325,15 +326,15 @@ do while (i.le.11)
 		dudt1(i,0,:) = dudt1@_FillValue				; Hide the 1000 mb level
 		dudt2(i,0,:) = dudt2@_FillValue				; Hide the 1000 mb level
 		res_con@cnLevelSpacingF        = 0.1			; Contour level Spacing
-		plotvec2 = gsn_contour(wks,dudt2(i,:,minlat:maxlat)-dudt1(i,:,minlat:maxlat),res_con)		; Creates plot for du/dt = div(F)/(a*cos(phi))
+		plotvec2 = gsn_contour(wks,dudt2(i,:,:)-dudt1(i,:,:),res_con)		; Creates plot for du/dt = div(F)/(a*cos(phi))
 		overlay(plotsig,plotvec2)
 	else
 		EPdiv1@_FillValue = -999.0
 		EPdiv2@_FillValue = -999.0
 		EPdiv1(i,0,:) = EPdiv2@_FillValue			; Hide the 1000 mb level
 		EPdiv2(i,0,:) = EPdiv2@_FillValue			; Hide the 1000 mb level
-		res_con@cnLevelSpacingF        = 2.			; Contour level Spacing
-		plotvec3 = gsn_contour(wks,EPdiv2(i,:,minlat:maxlat)-EPdiv1(i,:,minlat:maxlat),res_con)		; Creates plot for div(F)
+		res_con@cnLevelSpacingF        = 5.			; Contour level Spacing
+		plotvec3 = gsn_contour(wks,EPdiv2(i,:,:)-EPdiv1(i,:,:),res_con)		; Creates plot for div(F)
 		overlay(plotsig,plotvec3)
 	end if
 
