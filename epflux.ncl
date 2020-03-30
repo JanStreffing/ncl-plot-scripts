@@ -89,7 +89,7 @@ end
 nBoot		= 1000         							; user set
 nDim		= 0								; or (/0,0/); dimension numbers corresponding to 'N'
 opt		= True								; use all default options
-BootStrap	= bootstrap_diff(Fphi2_total, Fphi1_total, nBoot, nDim, opt)	; do all the resampling and calculations
+BootStrap	= bootstrap_diff(Fp2_total, Fp1_total, nBoot, nDim, opt)	; do all the resampling and calculations
 rBoot		= BootStrap[0]							; All the bootstrapped values
 rBootLow95	= bootstrap_estimate(rBoot, 0.025, False)   			; 2.5% lower confidence bound 
 rBootLow80	= bootstrap_estimate(rBoot, 0.1, False)   			; 2.5% lower confidence bound 
