@@ -6,15 +6,17 @@
 ;                  MAIN: 6.4.0 or later
 ;=======================================================================
 
+begin
+
 ;---Set options
   dir     = "./"                      					; directory with file
   var     = getenv("var")             					; model resolution
   fi      = addfile(dir+var+"_bpf_prep", "r")    			; file references (pointers)
-  fo      = dir+var+"_bpf.nc"    				                ; file references (pointers)
+  fo      = dir+var+"_bpf.nc"   				        ; file references (pointers)
 
 
 ; import the desired variables for the specified time period		; (time,plev,lat,lon)
-  data   = short2flt(fi->$var$(:,:,:,:))  
+  data   = fi->$var$(:,:,:,:)
 
 
 ; construction Lanczos filter
@@ -27,17 +29,47 @@
 
 
 ; compute running avarage
-  print(dimsizes(data))
-  filtered = wgt_runave (data(plev|:,lat|:,lon|:,time|:), wgt, 0)   	; compute running ave
+  out = wgt_runave_n (data, wgt, 0, 3)   	; compute running ave
+  copy_VarMeta(data, out)
 
-; return variable to original dimension  order
-  filtered!0 = "plev"							; giving names for later reorder
-  filtered!1 = "lat"
-  filtered!2 = "lon"
-  filtered!3 = "time"
-  out = filtered(time|:,plev|:,lat|:,lon|:)				; reorder
+; output to netcdf file
+  printMinMax(out,1)
+  print(getvardims(out))
 
-  ncdf = addfile(fo ,"c")  						; open output netCDF file
-  filedimdef(ncdf,"time",-1,True) 					; make a time axis
-  ncdf->$var$  = out                        				; write output into file
+  var_type  = "float"
+  system("/bin/rm -f "+fo)
+
+  setfileoption("nc","preFill",False)
+  setfileoption("nc","defineMode",True)
+
+  f = addfile(fo,"c")
+
+  fAtt               = True            ; assign file attributesfAtt@title         = "NCL Efficient Approach to netCDF Creation"
+  fAtt@title         = "Lanczos 2-8 day bandpass filtered "+var
+  fAtt@creation_date = systemfunc ("date")
+  fileattdef( f, fAtt )            ; copy file attributes
+
+  dims          = dimsizes(out)     ; ntim x nlev x nlat x nlev
+  dim_names     = getvardims(out)   ; "time", "lev", "lat", "lon"
+  dim_unlimited = (/True,False,False,False/)
+  filedimdef(f,dim_names,dims,dim_unlimited)
+
+  filevardef(f,"plev",typeof(out&plev),"plev")
+  filevardef(f,"lat", typeof(out&lat), "lat")
+  filevardef(f,"lon", typeof(out&lon), "lon")
+  filevardef(f,"out",typeof(out),     dim_names)
+
+  filevarattdef(f,"out" ,out)                    ; copy out attributes
+  filevarattdef(f,"plev" ,out&plev)               ; copy lev attributes
+  filevarattdef(f,"lat"  ,out&lat)                ; copy lat attributes
+  filevarattdef(f,"lon"  ,out&lon)                ; copy lon attributes
+
+  setfileoption(f,"DefineMode",False)
+
+  f->plev    = (/out&plev/)
+  f->lat    = (/out&lat/)
+  f->lon    = (/out&lon/)
+  f->out   = (/out/)                         ; write new variable
+
+end
 
