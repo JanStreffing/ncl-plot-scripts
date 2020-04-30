@@ -7,18 +7,19 @@ begin
 ; --------------- Part 1
 ; --------------- Load the data & time average
 
-	file_u = "U_bpf_ultimate"
-	fu = addfile(file_u, "r")
-        time = fu->time
- 	plev = fu->plev
- 	lat = fu->lat
- 	lon = fu->lon
-        file_v = "V_bpf_ultimate"
-        fv = addfile(file_v, "r")
-        file_vo = "VO_bpf_ultimate"
-        fvo = addfile(file_vo, "r")
-        u_vo = dim_avg_n_Wrap( (fu->U)*(fvo->VO), 0)
-        v_vo = dim_avg_n_Wrap( (fv->V)*(fvo->VO), 0)
+	dir     = "./"      					; model resolution
+	file_u 	= "U_bpf"
+	fu 	= addfile(dir+file_u, "r")
+;        time 	= fu->time
+ 	plev 	= fu->plev
+ 	lat 	= fu->lat
+ 	lon 	= fu->lon
+        file_v 	= "V_bpf"
+        fv 	= addfile(dir+file_v, "r")
+        file_vo = "VO_bpf"
+        fvo 	= addfile(dir+file_vo, "r")
+        u_vo 	= dim_avg_n_Wrap( (fu->out)*(fvo->out), 0)
+        v_vo 	= dim_avg_n_Wrap( (fv->out)*(fvo->out), 0)
 
 ; --------------- Part 2
 ; --------------- Divergence

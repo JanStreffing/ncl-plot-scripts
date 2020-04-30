@@ -29,13 +29,10 @@ begin
 
 
 ; compute running avarage
-  out = wgt_runave_n (data, wgt, 0, 3)   	; compute running ave
-  copy_VarMeta(data, out)
+  out = wgt_runave_n_Wrap (data, wgt, 0, 0)   	; compute running ave
+
 
 ; output to netcdf file
-  printMinMax(out,1)
-  print(getvardims(out))
-
   var_type  = "float"
   system("/bin/rm -f "+fo)
 
