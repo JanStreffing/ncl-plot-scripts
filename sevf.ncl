@@ -24,7 +24,7 @@ begin
 ; --------------- Part 2
 ; --------------- Divergence
 
-        dv = uv2dvF_Wrap(u_vo,u_vo)
+        dv = uv2dvF_Wrap(u_vo,v_vo)
 
 ; --------------- Part 2
 ; --------------- Laplacian
